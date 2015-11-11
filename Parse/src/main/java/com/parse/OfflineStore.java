@@ -899,6 +899,7 @@ import bolts.Task;
             if (object != null) {
               objectToUuidMap.remove(object);
               uuidToObjectMap.remove(uuid);
+              fetchedObjects.remove(object); // CrowdTunes
             }
           }
         }
