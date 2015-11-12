@@ -22,6 +22,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -170,7 +171,14 @@ import bolts.TaskCompletionSource;
    * object is in the map, a fetch of it has been started. If the value is a finished task, then the
    * fetch was completed.
    */
-  final private WeakHashMap<ParseObject, Task<ParseObject>> fetchedObjects = new WeakHashMap<>();
+  // CrowdTunes -- Use LinkedHashMap to limit max number of cached entries to 500
+  final static int MAX_ENTRIES = 500;
+  final private Map<ParseObject, Task<ParseObject>> fetchedObjects = new LinkedHashMap<ParseObject, Task<ParseObject>>() {
+    @Override
+  protected boolean removeEldestEntry(Map.Entry<ParseObject, Task<ParseObject>> e) {
+      return size() > MAX_ENTRIES;
+    }
+  };
 
   /**
    * Used by the static method to create the singleton.
@@ -900,7 +908,6 @@ import bolts.TaskCompletionSource;
             if (object != null) {
               objectToUuidMap.remove(object);
               uuidToObjectMap.remove(uuid);
-              fetchedObjects.remove(object); // CrowdTunes
             }
           }
         }
