@@ -1320,7 +1320,7 @@ public class ParseObject {
      * If this object is in the offline store, then we need to make sure that we pull in any dirty
      * changes it may have before merging the server data into it.
      */
-    final OfflineStore store = Parse.getLocalDatastore();
+    final OfflineStore store = null;//Parse.getLocalDatastore();
     if (store != null) {
       task = task.onSuccessTask(new Continuation<Void, Task<Void>>() {
         @Override
