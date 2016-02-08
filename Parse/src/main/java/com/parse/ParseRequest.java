@@ -66,8 +66,8 @@ import bolts.TaskCompletionSource;
       CORE_POOL_SIZE, MAX_POOL_SIZE, KEEP_ALIVE_TIME, TimeUnit.SECONDS,
       new LinkedBlockingQueue<Runnable>(MAX_QUEUE_SIZE), sThreadFactory);
 
-  protected static final int DEFAULT_MAX_RETRIES = 4;
-  /* package */ static final long DEFAULT_INITIAL_RETRY_DELAY = 1000L;
+  protected static final int DEFAULT_MAX_RETRIES = 0;
+  /* package */ static final long DEFAULT_INITIAL_RETRY_DELAY = 100L;
 
   private static long defaultInitialRetryDelay = DEFAULT_INITIAL_RETRY_DELAY;
 
