@@ -573,12 +573,14 @@ import bolts.TaskCompletionSource;
          * This object is an existing ParseObject, and we must've already pulled its data out of the
          * offline store, or else we wouldn't know its UUID. This should never happen.
          */
-        tcs.setError(new IllegalStateException("This object must have already been "
-            + "fetched from the local datastore, but isn't marked as fetched."));
-        synchronized (lock) {
-          // Forget we even tried to fetch this object, so that retries will actually... retry.
-          fetchedObjects.remove(object);
-        }
+//        tcs.setError(new IllegalStateException("This object must have already been "
+//            + "fetched from the local datastore, but isn't marked as fetched."));
+//        synchronized (lock) {
+//          // Forget we even tried to fetch this object, so that retries will actually... retry.
+//          fetchedObjects.remove(object);
+//        }
+//        return tcs.getTask();
+        tcs.setResult(object);
         return tcs.getTask();
       }
 
