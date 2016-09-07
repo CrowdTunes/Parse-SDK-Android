@@ -16,7 +16,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.SystemClock;
+import android.support.v4.content.LocalBroadcastManager;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,6 +32,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import bolts.Continuation;
 import bolts.Task;
 import bolts.TaskCompletionSource;
+
 
 /**
  * A class that manages registering for GCM and updating the registration if it is out of date.
@@ -118,6 +122,20 @@ import bolts.TaskCompletionSource;
     }
   }
 
+  private void broadcastError(final String errorMsg, final String type) {
+
+    Handler h = new Handler(Looper.getMainLooper());
+    h.postDelayed(new Runnable() {
+      @Override
+      public void run() {
+        Intent intent = new Intent();
+        intent.setAction(type);
+        intent.putExtra("error", errorMsg);
+        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+      }
+    }, 2000);
+  }
+
   private Task<Void> sendRegistrationRequestAsync() {
     synchronized (lock) {
       if (request != null) {
@@ -151,13 +169,20 @@ import bolts.TaskCompletionSource;
         }
       }
 
+      broadcastError("Registering with GCM", "GCMError");
+      broadcastError("Google Play Services is "+(ManifestInfo.isGooglePlayServicesAvailable() ? "" : "not ")+"available.  Sender ID = "+senderIDs, "GCMMessage");
+
       request = Request.createAndSend(context, senderIDs);
+      // Testing error message
+      //broadcastError("This is an error.  This is an error.  This is an error.  This is an error.  This is an error.");
+
       return request.getTask().continueWith(new Continuation<String, Void>() {
         @Override
         public Void then(Task<String> task) {
           Exception e = task.getError();
           if (e != null) {
             PLog.e(TAG, "Got error when trying to register for GCM push", e);
+            broadcastError("GCM registration error: "+e.getLocalizedMessage(), "GCMError");
           }
 
           synchronized (lock) {
@@ -186,6 +211,8 @@ import bolts.TaskCompletionSource;
       PLog.v(TAG, "Received deviceToken <" + registrationId + "> from GCM.");
 
       ParseInstallation installation = ParseInstallation.getCurrentInstallation();
+
+      broadcastError("Received deviceToken <" + registrationId + "> from GCM.", "GCMError");
       // Compare the new deviceToken with the old deviceToken, we only update the
       // deviceToken if the new one is different from the old one. This does not follow google
       // guide strictly. But we find most of the time if user just update the app, the
@@ -199,6 +226,9 @@ import bolts.TaskCompletionSource;
       // app is opened again, isDeviceTokenStale() will always return false so we will send
       // request to GCM every time.
       tasks.add(updateLocalDeviceTokenLastModifiedAsync());
+    }
+    else {
+      broadcastError("GCM registration succeeded but no deviceToken found", "GCMError");
     }
     synchronized (lock) {
       if (request != null) {
@@ -337,7 +367,7 @@ import bolts.TaskCompletionSource;
 
     private void send() {
       Intent intent = new Intent(REGISTER_ACTION);
-      intent.setPackage("com.google.android.gsf");
+      intent.setPackage("com.google.android.gms");
       intent.putExtra("sender", senderId);
       intent.putExtra("app", appIntent);
 
